@@ -121,9 +121,9 @@ namespace ParsingDataAchivment
                     var concretReestr = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[4]/div/table/tbody/tr[1]/td[1]/span[2]/a")));
                     string numberReestr = concretReestr.Text;
                     Console.WriteLine("Текст элемента:");
-                    Console.WriteLine(numberReestr); //2799900
+                    Console.WriteLine(numberReestr); //2799900 Реестр
 
-                    concretReestr.Click();
+                    concretReestr.Click(); //открывает инфу о реестре
 
                 }
                 catch (Exception ex)
