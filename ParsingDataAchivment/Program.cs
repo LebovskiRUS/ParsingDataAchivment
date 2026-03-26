@@ -119,11 +119,18 @@ namespace ParsingDataAchivment
                     //2799924 PDF 2799949 PDF 2799974 PDF 2799999 PDF
 
                     var concretReestr = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[4]/div/table/tbody/tr[1]/td[1]/span[2]/a")));
+                    Console.WriteLine(concretReestr.GetType());
                     string numberReestr = concretReestr.Text;
+                    Console.WriteLine(numberReestr.GetType());
                     Console.WriteLine("Текст элемента:");
                     Console.WriteLine(numberReestr); //2799900 Реестр
 
-                    concretReestr.Click(); //открывает инфу о реестре
+                    //concretReestr.Click(); //открывает инфу о реестре
+
+                    ParsingTitleList parsingTitleList  = new ParsingTitleList(concretReestr, driver);
+                    Console.WriteLine("Статус: " + parsingTitleList.Status);
+                    Console.WriteLine("Пошлина: " + parsingTitleList.Tariff);
+                    Console.WriteLine("Заявка: " + parsingTitleList.Application);
 
                 }
                 catch (Exception ex)
