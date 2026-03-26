@@ -1,6 +1,7 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using System;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ParsingDataAchivment
 {
@@ -9,8 +10,17 @@ namespace ParsingDataAchivment
         private IWebDriver driver;
         private IWebElement? xpath_title;
         public string Status { get; set; }
-        public string Tariff { get; set; }
-        public string Application { get; set; }
+        public string Tariff { get; set; } //Пошлина
+        public string Application { get; set; } //Заявка
+        public string StartPattern { get; set; } //Дата начала отсчета срока действия патента:
+        public string DataRegistration { get; set; }
+        public string DataSend { get; set; }
+        public string DataPublic {  get; set; }
+        public string ListDocumentCitationInReport { get; set; } //Список документов, цитированных в отчете о поиске:
+        public string AdresToCommunication { get; set; }
+        public string Author {  get; set; }
+        public string PatentHolder { get; set; } //Патентообладатель
+        public string Title { get; set; } //Название патента
 
         public ParsingTitleList(IWebElement xpath, IWebDriver driver)
         {
@@ -54,23 +64,30 @@ namespace ParsingDataAchivment
                     wait.Until(driver => driver.FindElement(By.XPath("//*[@id='mainDoc']")));
                 }
 
+                string FindElementForXPath(string xpath)
+                {
+                    return wait.Until(driver => driver.FindElement(By.XPath(xpath))).Text.Trim();
+                }
+
                 // Теперь ищем элементы на актуальной странице
-                var statusElement = wait.Until(driver =>driver.FindElement(By.XPath("//*[@id='mainDoc']/table[2]/tbody/tr[1]/td[2]")));
-                Status = statusElement.Text.Trim();
-
-                var tariffElement = wait.Until(driver =>driver.FindElement(By.XPath("//*[@id='mainDoc']/table[2]/tbody/tr[2]/td[2]")));
-                Tariff = tariffElement.Text.Trim();
-
-                var applicationElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[1]/b/a")));
-                Application = applicationElement.Text.Trim();
+                Status = FindElementForXPath("//*[@id='mainDoc']/table[2]/tbody/tr[1]/td[2]");
+                Tariff = FindElementForXPath("//*[@id='mainDoc']/table[2]/tbody/tr[2]/td[2]");
+                Application = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[1]/b/a");
+                StartPattern = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[2]/b");
+                DataRegistration = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[3]/b");
+                DataSend = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[5]/b");
+                DataPublic = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[6]/b[1]/a");
+                ListDocumentCitationInReport = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[7]/b");
+                AdresToCommunication = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[8]/b");
+                Author = FindElementForXPath("//*[@id=\"bibl\"]/p[1]/b");
+                PatentHolder = FindElementForXPath("//*[@id=\"bibl\"]/p[2]/b");
+                Title = FindElementForXPath("//*[@id=\"B542\"]/b");
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Ошибка при получении информации: {ex.Message}");
                 Console.WriteLine($"Текущий URL: {driver.Url}");
-                Status = "Не найден";
-                Tariff = "Не найден";
             }
         }
     }

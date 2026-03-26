@@ -118,12 +118,10 @@ namespace ParsingDataAchivment
                     //2799923 PDF 2799948 PDF 2799973 PDF 2799998 PDF
                     //2799924 PDF 2799949 PDF 2799974 PDF 2799999 PDF
 
-                    var concretReestr = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[4]/div/table/tbody/tr[1]/td[1]/span[2]/a")));
-                    Console.WriteLine(concretReestr.GetType());
+                    var concretReestr = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[4]/div/table/tbody/tr[2]/td[1]/span[2]/a")));
                     string numberReestr = concretReestr.Text;
-                    Console.WriteLine(numberReestr.GetType());
                     Console.WriteLine("Текст элемента:");
-                    Console.WriteLine(numberReestr); //2799900 Реестр
+                    Console.WriteLine(numberReestr); //2799901 Реестр
 
                     //concretReestr.Click(); //открывает инфу о реестре
 
@@ -131,6 +129,15 @@ namespace ParsingDataAchivment
                     Console.WriteLine("Статус: " + parsingTitleList.Status);
                     Console.WriteLine("Пошлина: " + parsingTitleList.Tariff);
                     Console.WriteLine("Заявка: " + parsingTitleList.Application);
+                    Console.WriteLine("Дата начала отсчета срока действия патента: " +  parsingTitleList.StartPattern);
+                    Console.WriteLine("Дата Регистрации: " + parsingTitleList.DataRegistration);
+                    Console.WriteLine("Дата Отправки: " + parsingTitleList.DataSend);
+                    Console.WriteLine("Дата Публикации: " + parsingTitleList.DataPublic);
+                    Console.WriteLine("Список документов, цитированных в отчете о поиске: " + parsingTitleList.ListDocumentCitationInReport);
+                    Console.WriteLine("Адрес для переписки" + parsingTitleList.AdresToCommunication);
+                    Console.WriteLine("Автор(ы): " + parsingTitleList.Author);
+                    Console.WriteLine("Патентообладатель(и): " + parsingTitleList.PatentHolder);
+                    Console.WriteLine("Название патента: " + parsingTitleList.Title);
 
                 }
                 catch (Exception ex)
