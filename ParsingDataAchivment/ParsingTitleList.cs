@@ -27,6 +27,7 @@ namespace ParsingDataAchivment
             this.xpath_title = xpath;
             this.driver = driver;
             GetInfo();
+
         }
 
         public void GetInfo()

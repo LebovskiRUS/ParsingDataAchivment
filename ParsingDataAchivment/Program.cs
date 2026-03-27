@@ -52,7 +52,6 @@ namespace ParsingDataAchivment
                         var sixElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[4]/div/table/tbody/tr[1]/td[1]/span[2]/a")));
                         string data = sixElement.Text.Trim();
                         Console.WriteLine($"Номер модели: {data}");
-
                         ParsingTitleList parsingTitleList = new ParsingTitleList(sixElement, driver);
                         Console.WriteLine("Статус: " + parsingTitleList.Status);
                         Console.WriteLine("Пошлина: " + parsingTitleList.Tariff);
@@ -66,6 +65,8 @@ namespace ParsingDataAchivment
                         Console.WriteLine("Автор(ы): " + parsingTitleList.Author);
                         Console.WriteLine("Патентообладатель(и): " + parsingTitleList.PatentHolder);
                         Console.WriteLine("Название патента: " + parsingTitleList.Title);
+
+                        JsonCreater jsonCreate = (JsonCreater)parsingTitleList;
                     }
                     catch (Exception ex)
                     {
