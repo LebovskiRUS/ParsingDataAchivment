@@ -66,7 +66,19 @@ namespace ParsingDataAchivment
 
                 string FindElementForXPath(string xpath)
                 {
-                    return wait.Until(driver => driver.FindElement(By.XPath(xpath))).Text.Trim();
+                    try
+                    {
+                        var elements = driver.FindElements(By.XPath(xpath));
+                        if (elements.Count > 0)
+                        {
+                            return elements[0].Text.Trim();
+                        }
+                        return "Пусто";
+                    }
+                    catch (OpenQA.Selenium.NoSuchElementException)
+                    {
+                        return "Пусто";
+                    }
                 }
 
                 // Теперь ищем элементы на актуальной странице
