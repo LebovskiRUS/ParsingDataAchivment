@@ -1,8 +1,10 @@
-﻿using OpenQA.Selenium;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using OpenQA.Selenium;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ParsingDataAchivment
 {
@@ -10,109 +12,150 @@ namespace ParsingDataAchivment
     {
         private readonly string _jsonFilePath = "patent.json";
         private readonly string _jsonFilePathId = "id_patent.json";
+
         public JsonCreater(IWebElement xpath, IWebDriver driver, string id) : base(xpath, driver, id)
         {
-           
         }
-        // Асинхронная версия
+
+        // Новый вариант: если страница уже открыта через поиск
+        public JsonCreater(IWebDriver driver, string id) : base(driver, id)
+        {
+        }
+
         public async Task CreateJsonAsync()
         {
-            await Task.Run(() => CreateJson());
-        }
-        public void CreateJson()
-        {
-            int newId = Convert.ToInt32(Application);
-
-            // Загружаем или создаем файл с id
-            dynamic data_id = LoadOrCreateIdFile();
-
-            // Проверяем существование id
-            foreach (int id in data_id.id)
+            if (!int.TryParse(Application, out int newId))
             {
-                if(id == newId) { return; }
+                Console.WriteLine($"Не удалось преобразовать Application='{Application}' в число.");
+                return;
             }
 
-            // Добавляем новый id
-            data_id.id.Add(newId);
-            string updateJsonId = JsonConvert.SerializeObject(data_id, Formatting.Indented);
-            File.WriteAllText(_jsonFilePathId, updateJsonId);
+            PatentIdStore dataId = await LoadOrCreateIdFileAsync();
 
-            var data = new
+            if (dataId.Id.Contains(newId))
             {
-                id = Convert.ToInt32(Application),
-                status = Status,
-                tariff = Tariff,
-                start_pattern = StartPattern,
-                data_registrate = DataRegistration,
-                data_send = DataSend,
-                data_public = DataPublic,
-                citatioin = ListDocumentCitationInReport,
-                communicate = AdresToCommunication,
-                author = SplitAuthor(Author),
-                patent_holder = PatentHolder,
-                title = Title,
-                color = Color
+                Console.WriteLine($"Патент {newId} уже есть в id_patent.json. Пропуск.");
+                return;
+            }
 
+            dataId.Id.Add(newId);
+            string updateJsonId = JsonConvert.SerializeObject(dataId, Formatting.Indented);
+            await File.WriteAllTextAsync(_jsonFilePathId, updateJsonId);
+
+            var data = new PatentRecord
+            {
+                Id = newId,
+                Status = Status,
+                Tariff = Tariff,
+                StartPattern = StartPattern,
+                DataRegistration = DataRegistration,
+                DataSend = DataSend,
+                DataPublic = DataPublic,
+                Citation = ListDocumentCitationInReport,
+                Communicate = AdresToCommunication,
+                Author = SplitAuthor(Author),
+                PatentHolder = PatentHolder,
+                Title = Title,
+                Color = Color
             };
 
-            // Читаем существующие патенты или создаем новый список
-            List<object> patents;
+            List<PatentRecord> patents = new();
+
             if (File.Exists(_jsonFilePath))
             {
-                string existingJson = File.ReadAllText(_jsonFilePath);
-                patents = JsonConvert.DeserializeObject<List<object>>(existingJson) ?? new List<object>();
-            }
-            else
-            {
-                patents = new List<object>();
+                string existingJson = await File.ReadAllTextAsync(_jsonFilePath);
+                if (!string.IsNullOrWhiteSpace(existingJson))
+                {
+                    patents = JsonConvert.DeserializeObject<List<PatentRecord>>(existingJson) ?? new List<PatentRecord>();
+                }
             }
 
-            // Добавляем новый патент
             patents.Add(data);
 
-            // Сохраняем обновленный список
             string updatedJson = JsonConvert.SerializeObject(patents, Formatting.Indented);
-            File.WriteAllText(_jsonFilePath, updatedJson);
+            await File.WriteAllTextAsync(_jsonFilePath, updatedJson);
 
             Console.WriteLine($"Патент {Application} добавлен в JSON. Всего патентов: {patents.Count}");
         }
 
-        private List<string> SplitAuthor(string authorString)
+        private static List<string> SplitAuthor(string authorString)
         {
-            if(string.IsNullOrEmpty(authorString)) 
+            if (string.IsNullOrWhiteSpace(authorString))
                 return new List<string>();
-            var authors = authorString.Split([",\r\n",","], StringSplitOptions.RemoveEmptyEntries);
-            return authors.Select(x => x.Trim()).ToList();
+
+            return authorString
+                .Split(new[] { "\r\n", "\n", "," }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToList();
         }
 
-        private dynamic LoadOrCreateIdFile()
+        private async Task<PatentIdStore> LoadOrCreateIdFileAsync()
         {
             if (!File.Exists(_jsonFilePathId))
             {
-                // Создаем файл с пустым списком
-                var initialData = new { id = new List<int>() };
+                var initialData = new PatentIdStore();
                 string initialJson = JsonConvert.SerializeObject(initialData, Formatting.Indented);
-                File.WriteAllText(_jsonFilePathId, initialJson);
+                await File.WriteAllTextAsync(_jsonFilePathId, initialJson);
                 return initialData;
             }
 
-            string id_count = File.ReadAllText(_jsonFilePathId);
+            string idCount = await File.ReadAllTextAsync(_jsonFilePathId);
 
-            if (string.IsNullOrWhiteSpace(id_count))
-            {
-                return new { id = new List<int>() };
-            }
+            if (string.IsNullOrWhiteSpace(idCount))
+                return new PatentIdStore();
 
-            var data = JsonConvert.DeserializeObject<dynamic>(id_count);
-
-            // Если свойство id отсутствует, добавляем его
-            if (data.id == null)
-            {
-                data.id = new List<int>();
-            }
-
+            var data = JsonConvert.DeserializeObject<PatentIdStore>(idCount) ?? new PatentIdStore();
+            data.Id ??= new List<int>();
             return data;
         }
+    }
 
+    internal class PatentIdStore
+    {
+        [JsonProperty("id")]
+        public List<int> Id { get; set; } = new();
+    }
+
+    internal class PatentRecord
+    {
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; } = "Пусто";
+
+        [JsonProperty("tariff")]
+        public string Tariff { get; set; } = "Пусто";
+
+        [JsonProperty("start_pattern")]
+        public string StartPattern { get; set; } = "Пусто";
+
+        [JsonProperty("data_registrate")]
+        public string DataRegistration { get; set; } = "Пусто";
+
+        [JsonProperty("data_send")]
+        public string DataSend { get; set; } = "Пусто";
+
+        [JsonProperty("data_public")]
+        public string DataPublic { get; set; } = "Пусто";
+
+        [JsonProperty("citatioin")]
+        public string Citation { get; set; } = "Пусто";
+
+        [JsonProperty("communicate")]
+        public string Communicate { get; set; } = "Пусто";
+
+        [JsonProperty("author")]
+        public List<string> Author { get; set; } = new();
+
+        [JsonProperty("patent_holder")]
+        public string PatentHolder { get; set; } = "Пусто";
+
+        [JsonProperty("title")]
+        public string Title { get; set; } = "Пусто";
+
+        [JsonProperty("color")]
+        public string Color { get; set; } = "Пусто";
     }
 }
