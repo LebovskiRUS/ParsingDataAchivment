@@ -71,7 +71,7 @@ namespace ParsingDataAchivment
                 {
                     try
                     {
-                        var elements = driver.FindElements(By.XPath(xpath));
+                        var elements = wait.Until(driver => driver.FindElements(By.XPath(xpath)));
                         if (elements.Count > 0)
                         {
                             return elements[0].Text.Trim();
@@ -87,7 +87,6 @@ namespace ParsingDataAchivment
                 // Теперь ищем элементы на актуальной странице
                 Status = FindElementForXPath("//*[@id='mainDoc']/table[2]/tbody/tr[1]/td[2]");
                 Tariff = FindElementForXPath("//*[@id='mainDoc']/table[2]/tbody/tr[2]/td[2]");
-                //Application = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[1]/b/a");
                 StartPattern = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[2]/b").Replace(".", "-");
                 DataRegistration = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[3]/b").Replace(".", "-");
                 DataSend = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[5]/b").Replace(".", "-");

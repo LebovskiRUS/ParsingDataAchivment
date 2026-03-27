@@ -14,7 +14,11 @@ namespace ParsingDataAchivment
         {
            
         }
-
+        // Асинхронная версия
+        public async Task CreateJsonAsync()
+        {
+            await Task.Run(() => CreateJson());
+        }
         public void CreateJson()
         {
             int newId = Convert.ToInt32(Application);
