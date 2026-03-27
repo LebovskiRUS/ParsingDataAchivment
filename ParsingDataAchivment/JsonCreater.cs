@@ -17,6 +17,21 @@ namespace ParsingDataAchivment
 
         public void CreateJson()
         {
+            int newId = Convert.ToInt32(Application);
+
+            // Загружаем или создаем файл с id
+            dynamic data_id = LoadOrCreateIdFile();
+
+            // Проверяем существование id
+            foreach (int id in data_id.id)
+            {
+                if(id == newId) { return; }
+            }
+
+            // Добавляем новый id
+            data_id.id.Add(newId);
+            string updateJsonId = JsonConvert.SerializeObject(data_id, Formatting.Indented);
+            File.WriteAllText(_jsonFilePathId, updateJsonId);
 
             var data = new
             {
@@ -65,5 +80,35 @@ namespace ParsingDataAchivment
             var authors = authorString.Split([",\r\n",","], StringSplitOptions.RemoveEmptyEntries);
             return authors.Select(x => x.Trim()).ToList();
         }
+
+        private dynamic LoadOrCreateIdFile()
+        {
+            if (!File.Exists(_jsonFilePathId))
+            {
+                // Создаем файл с пустым списком
+                var initialData = new { id = new List<int>() };
+                string initialJson = JsonConvert.SerializeObject(initialData, Formatting.Indented);
+                File.WriteAllText(_jsonFilePathId, initialJson);
+                return initialData;
+            }
+
+            string id_count = File.ReadAllText(_jsonFilePathId);
+
+            if (string.IsNullOrWhiteSpace(id_count))
+            {
+                return new { id = new List<int>() };
+            }
+
+            var data = JsonConvert.DeserializeObject<dynamic>(id_count);
+
+            // Если свойство id отсутствует, добавляем его
+            if (data.id == null)
+            {
+                data.id = new List<int>();
+            }
+
+            return data;
+        }
+
     }
 }
