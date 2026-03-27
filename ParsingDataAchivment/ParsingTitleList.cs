@@ -20,10 +20,12 @@ namespace ParsingDataAchivment
         public string AdresToCommunication { get; set; }
         public string Author {  get; set; }
         public string PatentHolder { get; set; } //Патентообладатель
-        public string Title { get; set; } //Название патента
+        public string Title { get; set; }
+        public string Color { get; set; }//Название патента
 
-        public ParsingTitleList(IWebElement xpath, IWebDriver driver)
+        public ParsingTitleList(IWebElement xpath, IWebDriver driver, string id)
         {
+            Application = id;
             this.xpath_title = xpath;
             this.driver = driver;
             GetInfo();
@@ -85,16 +87,18 @@ namespace ParsingDataAchivment
                 // Теперь ищем элементы на актуальной странице
                 Status = FindElementForXPath("//*[@id='mainDoc']/table[2]/tbody/tr[1]/td[2]");
                 Tariff = FindElementForXPath("//*[@id='mainDoc']/table[2]/tbody/tr[2]/td[2]");
-                Application = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[1]/b/a");
-                StartPattern = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[2]/b");
-                DataRegistration = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[3]/b");
-                DataSend = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[5]/b");
-                DataPublic = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[6]/b[1]/a");
-                ListDocumentCitationInReport = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[7]/b");
+                //Application = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[1]/b/a");
+                StartPattern = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[2]/b").Replace(".", "-");
+                DataRegistration = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[3]/b").Replace(".", "-");
+                DataSend = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[5]/b").Replace(".", "-");
+                DataPublic = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[6]/b[1]/a").Replace(".", "-");
+                ListDocumentCitationInReport = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[7]/b");//загнать реплес через регикс что бы точки не потерять
                 AdresToCommunication = FindElementForXPath("//*[@id=\"bib\"]/tbody/tr[2]/td[1]/p[8]/b");
                 Author = FindElementForXPath("//*[@id=\"bibl\"]/p[1]/b");
                 PatentHolder = FindElementForXPath("//*[@id=\"bibl\"]/p[2]/b");
                 Title = FindElementForXPath("//*[@id=\"B542\"]/b");
+                IWebElement color = driver.FindElement(By.XPath("//*[@id=\"mainDoc\"]/table[2]/tbody/tr[1]"));
+                string classname = color.GetAttribute("class");
 
             }
             catch (Exception ex)
@@ -103,5 +107,6 @@ namespace ParsingDataAchivment
                 Console.WriteLine($"Текущий URL: {driver.Url}");
             }
         }
+
     }
 }

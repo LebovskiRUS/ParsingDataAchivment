@@ -8,9 +8,9 @@ namespace ParsingDataAchivment
 {
     internal class JsonCreater : ParsingTitleList
     {
-        public JsonCreater(IWebElement xpath, IWebDriver driver) : base(xpath, driver)
+        public JsonCreater(IWebElement xpath, IWebDriver driver, string id) : base(xpath, driver, id)
         {
-            CreateJson();
+           
         }
 
         public void CreateJson()
@@ -28,11 +28,13 @@ namespace ParsingDataAchivment
                 communicate = AdresToCommunication,
                 author = Author,
                 patent_holder = PatentHolder,
-                title = Title
+                title = Title,
+                color = Color
 
             };
             string json = JsonConvert.SerializeObject(data, Formatting.Indented);
             File.WriteAllText("patent.json", json);
+            Console.WriteLine("json создался");
         }
     }
 }

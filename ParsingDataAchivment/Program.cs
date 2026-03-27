@@ -21,8 +21,8 @@ namespace ParsingDataAchivment
         public static void Main(string[] args)
         {
 
-            //ParsingReestrInvation(UrlInfo.urls[0]);
-            ParsingUsellesModel(UrlInfo.urls[1]);
+            ParsingReestrInvation(UrlInfo.urls[0]);
+            //ParsingUsellesModel(UrlInfo.urls[1]);
 
             void ParsingUsellesModel(string url)
             {
@@ -52,7 +52,7 @@ namespace ParsingDataAchivment
                         var sixElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[4]/div/table/tbody/tr[1]/td[1]/span[2]/a")));
                         string data = sixElement.Text.Trim();
                         Console.WriteLine($"Номер модели: {data}");
-                        ParsingTitleList parsingTitleList = new ParsingTitleList(sixElement, driver);
+                        JsonCreater parsingTitleList = new JsonCreater(sixElement, driver, data);
                         Console.WriteLine("Статус: " + parsingTitleList.Status);
                         Console.WriteLine("Пошлина: " + parsingTitleList.Tariff);
                         Console.WriteLine("Заявка: " + parsingTitleList.Application);
@@ -66,7 +66,7 @@ namespace ParsingDataAchivment
                         Console.WriteLine("Патентообладатель(и): " + parsingTitleList.PatentHolder);
                         Console.WriteLine("Название патента: " + parsingTitleList.Title);
 
-                        JsonCreater jsonCreate = (JsonCreater)parsingTitleList;
+                        parsingTitleList.CreateJson();
                     }
                     catch (Exception ex)
                     {
@@ -188,7 +188,7 @@ namespace ParsingDataAchivment
 
                         //concretReestr.Click(); //открывает инфу о реестре
 
-                        ParsingTitleList parsingTitleList = new ParsingTitleList(concretReestr, driver);
+                        JsonCreater parsingTitleList = new JsonCreater(concretReestr, driver, numberReestr);
                         Console.WriteLine("Статус: " + parsingTitleList.Status);
                         Console.WriteLine("Пошлина: " + parsingTitleList.Tariff);
                         Console.WriteLine("Заявка: " + parsingTitleList.Application);
@@ -202,6 +202,7 @@ namespace ParsingDataAchivment
                         Console.WriteLine("Патентообладатель(и): " + parsingTitleList.PatentHolder);
                         Console.WriteLine("Название патента: " + parsingTitleList.Title);
 
+                        parsingTitleList.CreateJson();
                     }
                     catch (Exception ex)
                     {
