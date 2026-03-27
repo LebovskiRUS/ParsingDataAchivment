@@ -21,7 +21,7 @@ namespace ParsingDataAchivment
         public string Author {  get; set; }
         public string PatentHolder { get; set; } //Патентообладатель
         public string Title { get; set; }
-        public string Color { get; set; }//Название патента
+        public string Color { get; set; }
 
         public ParsingTitleList(IWebElement xpath, IWebDriver driver, string id)
         {
@@ -98,7 +98,7 @@ namespace ParsingDataAchivment
                 PatentHolder = FindElementForXPath("//*[@id=\"bibl\"]/p[2]/b");
                 Title = FindElementForXPath("//*[@id=\"B542\"]/b");
                 IWebElement color = driver.FindElement(By.XPath("//*[@id=\"mainDoc\"]/table[2]/tbody/tr[1]"));
-                string classname = color.GetAttribute("class");
+                Color = color.GetAttribute("class");
 
             }
             catch (Exception ex)
