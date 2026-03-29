@@ -10,8 +10,8 @@ namespace ParsingDataAchivment
     {
         public static async Task Main(string[] args)
         {
-            await ParsingReestrInvation(UrlInfo.urls[0]);
-            //await ParsingUsellesModel(UrlInfo.urls[1]);
+            //await ParsingReestrInvation(UrlInfo.urls[0]);
+            await ParsingUsellesModel(UrlInfo.urls[1]);
         }
 
         static void PrintPatentInfo(ParsingTitleList patent)
@@ -33,50 +33,113 @@ namespace ParsingDataAchivment
 
         static async Task ParsingUsellesModel(string url)
         {
-            using (IWebDriver driver = new ChromeDriver())
+            var options = new ChromeOptions();
+
+            // Если хочешь меньше грузить ПК — можно включить headless
+            //options.AddArgument("--headless=new");
+
+            options.AddArgument("--disable-gpu");
+            options.AddArgument("--disable-notifications");
+            options.AddArgument("--no-sandbox");
+            options.AddArgument("--disable-dev-shm-usage");
+
+            // Отключаем картинки
+            options.AddUserProfilePreference("profile.managed_default_content_settings.images", 2);
+
+            // Чтобы не ждать полной загрузки всех ресурсов
+            options.PageLoadStrategy = PageLoadStrategy.Eager;
+
+            using IWebDriver driver = new ChromeDriver(options);
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(12));
+
+            try
             {
-                try
+                // Открываем страницу один раз
+                driver.Navigate().GoToUrl(url);
+
+                var open = wait.Until(d =>
+                    d.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[2]/div/table/tbody/tr[3]/td[2]/a")));
+                open.Click();
+
+                // Ждём поле поиска
+                wait.Until(d => d.FindElements(By.Id("searchParValue")).Count > 0);
+
+                string searchPageHandle = driver.CurrentWindowHandle;
+
+                for (int patentId = 240000; patentId <= 299999; patentId++)
                 {
-                    Console.WriteLine("Открываем url");
-                    driver.Navigate().GoToUrl(url);
 
-                    WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(4));
+                    try
+                    {
+                        // Запоминаем окна до поиска
+                        var handlesBefore = driver.WindowHandles.ToList();
 
-                    var oneElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[2]/div/table/tbody/tr[3]/td[2]/a")));
-                    oneElement.Click();
+                        var search = wait.Until(d => d.FindElement(By.Id("searchParValue")));
+                        search.Clear();
+                        search.SendKeys(patentId.ToString());
+                        search.SendKeys(Keys.Enter);
 
-                    var twoElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div[2]/div/ul/ul/li[2]/a[2]")));
-                    twoElement.Click();
+                        // Ждём либо новую вкладку, либо появление карточки
+                        wait.Until(d =>
+                            d.WindowHandles.Count != handlesBefore.Count ||
+                            d.FindElements(By.Id("mainDoc")).Count > 0 ||
+                            d.FindElements(By.Id("B542")).Count > 0 ||
+                            d.FindElements(By.Id("bibl")).Count > 0);
 
-                    var threeElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div[2]/div/ul/ul/ul/li[1]/a[2]")));
-                    threeElement.Click();
+                        // Если открылось новое окно — переключаемся на него
+                        if (driver.WindowHandles.Count > handlesBefore.Count)
+                        {
+                            var newHandle = driver.WindowHandles.First(h => !handlesBefore.Contains(h));
+                            driver.SwitchTo().Window(newHandle);
+                        }
 
-                    var fourElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div[2]/div/ul/ul/ul/ul/li[1]/a[2]")));
-                    fourElement.Click();
+                        // Даём странице ещё чуть времени появиться
+                        wait.Until(d =>
+                            d.FindElements(By.Id("mainDoc")).Count > 0 ||
+                            d.FindElements(By.Id("B542")).Count > 0 ||
+                            d.FindElements(By.Id("bibl")).Count > 0);
 
-                    var fifeElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div[2]/div/ul/ul/ul/ul/ul/li[1]/a")));
-                    fifeElement.Click();
+                        // Проверка: если карточки нет, пропускаем номер
+                        bool patentPageExists =
+                            driver.FindElements(By.Id("mainDoc")).Count > 0 ||
+                            driver.FindElements(By.Id("B542")).Count > 0 ||
+                            driver.FindElements(By.Id("bibl")).Count > 0;
 
-                    var sixElement = wait.Until(driver => driver.FindElement(By.XPath("//*[@id=\"mainpagecontent\"]/div[2]/div/div[4]/div/table/tbody/tr[1]/td[1]/span[2]/a")));
-                    string data = sixElement.Text.Trim();
+                        if (!patentPageExists)
+                        {
+                            Console.WriteLine($"[{patentId}] не найден");
+                            ReturnToSearchPage(driver, wait, url, searchPageHandle);
+                            continue;
+                        }
 
-                    Console.WriteLine($"Номер модели: {data}");
+                        var patent = new JsonCreater(driver, patentId.ToString());
+                        patent.GetInfo(false);
 
-                    JsonCreater parsingTitleList = new JsonCreater(sixElement, driver, data);
-                    parsingTitleList.GetInfo();
+                        Console.WriteLine($"[{patentId}] найден");
+                        PrintPatentInfo(patent);
 
-                    PrintPatentInfo(parsingTitleList);
+                        await patent.CreateJsonAsync();
 
-                    await parsingTitleList.CreateJsonAsync();
+                        // Возвращаемся назад к поиску
+                        ReturnToSearchPage(driver, wait, url, searchPageHandle);
+                    }
+                    catch (WebDriverTimeoutException)
+                    {
+                        Console.WriteLine($"[{patentId}] не найден / таймаут");
+                        ReturnToSearchPage(driver, wait, url, searchPageHandle);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[{patentId}] ошибка: {ex.Message}");
+                        ReturnToSearchPage(driver, wait, url, searchPageHandle);
+                    }
+
+                    await Task.Delay(3000); // чтобы сайт на быстрый парсер не ругался
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-                finally
-                {
-                    driver.Quit();
-                }
+            }
+            finally
+            {
+                driver.Quit();
             }
         }
 
@@ -85,7 +148,7 @@ namespace ParsingDataAchivment
             var options = new ChromeOptions();
 
             // Если хочешь меньше грузить ПК — можно включить headless
-            options.AddArgument("--headless=new");
+            //options.AddArgument("--headless=new");
 
             options.AddArgument("--disable-gpu");
             options.AddArgument("--disable-notifications");
