@@ -148,7 +148,7 @@ namespace ParsingDataAchivment
             var options = new ChromeOptions();
 
             // Если хочешь меньше грузить ПК — можно включить headless
-            //options.AddArgument("--headless=new");
+            options.AddArgument("--headless=new");
 
             options.AddArgument("--disable-gpu");
             options.AddArgument("--disable-notifications");
