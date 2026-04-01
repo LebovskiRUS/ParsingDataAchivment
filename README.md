@@ -28,6 +28,7 @@ https://www1.fips.ru/registers-web/action?acName=clickRegister&regName=RUPM
 
 ### JsonCreate.cs
 Файл для создания и сохранения JSON-файлов:
+Также сканирует id_patent.json и проверяет на наличие повторных id
 
 Файл:	
 - patent.json
