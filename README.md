@@ -32,6 +32,7 @@ https://www1.fips.ru/registers-web/action?acName=clickRegister&regName=RUPM
 Файл:	
 - patent.json
 - id_patent.json
+
 Содержание:
 - Полные данные о патентах
 - Идентификаторы (ID) патентов
